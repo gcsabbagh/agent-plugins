@@ -114,7 +114,16 @@ function publish() {
   if (released === 0) console.log('release: nothing new to release');
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// realpath on both sides: on macOS the temp dir is under /var, a symlink to
+// /private/var, so the two spellings of this file's path can differ.
+const isMain = () => {
+  try {
+    return fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+};
+if (process.argv[1] && isMain()) {
   try {
     if (publishOnly || versionPackages()) publish();
   } catch (e) {

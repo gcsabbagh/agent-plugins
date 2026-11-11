@@ -20,7 +20,8 @@ const fwd = (p) => p.replaceAll('\\', '/');
 const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
 
 function findBash() {
-  if (!isWin) return 'bash';
+  // An absolute path, so tests that trim PATH can still start bash.
+  if (!isWin) return spawnSync('sh', ['-c', 'command -v bash'], { encoding: 'utf8' }).stdout.trim() || undefined;
   const candidates = [path.join(process.env.ProgramFiles ?? 'C:\\Program Files', 'Git', 'bin', 'bash.exe')];
   const where = spawnSync('where', ['git'], { encoding: 'utf8' });
   if (where.status === 0) candidates.push(path.resolve(path.dirname(where.stdout.split(/\r?\n/)[0]), '..', 'bin', 'bash.exe'));
@@ -813,7 +814,9 @@ describe('one-line install (get.sh, get.ps1)', { skip }, () => {
   const withAgy = (s) => ({ [pathKey]: `${fakeBin}${path.delimiter}${s.env[pathKey]}` });
   const getSh = path.join(scriptsDir, 'get.sh');
   const getPs1 = path.join(scriptsDir, 'get.ps1');
-  const tmpLeft = (s) => fs.readdirSync(s.tmp).length;
+  // Only what get.sh (mktemp -d: tmp.*) and get.ps1 (context-guard-*) create.
+  // pwsh on macOS leaves files of its own in TMPDIR.
+  const tmpLeft = (s) => fs.readdirSync(s.tmp).filter((n) => /^(tmp\.|context-guard-)/.test(n)).length;
 
   test('get.sh piped to bash: installs the newest published context-guard release', async () => {
     releases = releaseList; requests = [];

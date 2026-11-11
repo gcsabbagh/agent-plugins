@@ -91,9 +91,11 @@ script_cmd() { # <name> [args]
     esac
     printf '%s %s%s\n' "$launcher" "$name" "$args"
   else
-    local env=""
-    [ "$RUN_DIR" = "$CG_DIR" ] || env="CONTEXT_GUARD_DIR=${CG_DIR/#$HOME/\~} "
-    printf '%sbash %s/%s.sh%s\n' "$env" "${RUN_DIR/#$HOME/\~}" "$name" "$args"
+    # The ~ comes from a variable: bash 3.2 (macOS) keeps the backslash of a
+    # literal \~, and newer bash expands a bare ~ back to $HOME.
+    local env="" tilde='~'
+    [ "$RUN_DIR" = "$CG_DIR" ] || env="CONTEXT_GUARD_DIR=${CG_DIR/#$HOME/$tilde} "
+    printf '%sbash %s/%s.sh%s\n' "$env" "${RUN_DIR/#$HOME/$tilde}" "$name" "$args"
   fi
 }
 
