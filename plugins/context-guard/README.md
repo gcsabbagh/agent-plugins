@@ -197,7 +197,7 @@ To add one:
 - **`prompt-hook.sh`:** add a flag for the agent's hook input keys, output format and `/compact` syntax.
 - **`statusline.sh`:** segments show whenever their fields are present, so change it only if the agent's status line JSON uses other field names, or sends something new worth showing.
 - **Manifest:** add one if the agent has a plugin format, and add it to the test that keeps the manifests' name, version and description in sync.
-- **Tests and docs:** add tests in `test/context-guard.test.mjs`, a column in the tables above, and a column in the [repo README](../../README.md).
+- **Tests and docs:** add tests to the matching files in `test/` (see [Tests](#tests)), a column in the tables above, and a column in the [repo README](../../README.md).
 
 ## Tests
 
@@ -205,4 +205,12 @@ To add one:
 npm test
 ```
 
-`test/context-guard.test.mjs` runs the status line, the prompt hook and the installer for every supported agent, including both agy routes. Each case uses a temporary home folder, so your real config isn't touched. On Windows it also runs the `.cmd` launchers and the plugin's hook command through `cmd` the way agy does, and checks that the installer hands off from WSL's bash to `install.ps1` (or stops when it can't). The one-line installers (`get.sh`, `get.ps1`) run against a local server standing in for GitHub, with a fake `agy` for `--agy-plugin`. `install.ps1` and `get.ps1` are tested under every PowerShell found (Windows PowerShell 5.1, PowerShell 7). It needs `jq` and, on Windows, Git Bash. Cases that need agy, WSL or PowerShell are skipped when those aren't installed.
+The tests in `test/` run the scripts for every supported agent. Each case uses a temporary home folder, so your real config isn't touched. Vitest runs the files in parallel:
+
+- **`statusline.test.mjs`:** the status line and the prompt hook.
+- **`installer.test.mjs`:** the installer, including both agy routes, and the manifests.
+- **`windows.test.mjs`** (Windows only): the `.cmd` launchers and the plugin's hook command, run through `cmd` the way agy does. It also checks that the installer hands off from WSL's bash to `install.ps1`, or stops when it can't.
+- **`install-ps1.test.mjs`:** `install.ps1`.
+- **`one-line-install.test.mjs`:** `get.sh` and `get.ps1`, against a local server standing in for GitHub, with a fake `agy` for `--agy-plugin`.
+
+`helpers.mjs` holds the shared setup. `install.ps1` and `get.ps1` are tested under every PowerShell found (Windows PowerShell 5.1, PowerShell 7). The tests need `jq` and, on Windows, Git Bash. Cases that need agy, WSL or PowerShell are skipped when those aren't installed.
