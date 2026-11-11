@@ -36,7 +36,7 @@ You need the last command because plugins can't set `statusLine`. The install sc
 
 The same scripts also work in agy. There are two ways to install it. Either way, restart agy afterwards. `--quiet` works the same as for Claude Code. In quiet mode, agy's own status line stays visible (`stack_with_default`).
 
-The commands below are for bash (macOS, Linux, Git Bash). From PowerShell, on any OS, use `install.ps1` instead of `bash install.sh`, with the same arguments. On Windows, `bash` in PowerShell is usually WSL's, which would install into WSL. `install.sh` stops when it notices this, and `install.ps1` finds Git Bash for you:
+The commands below are for bash (macOS, Linux, Git Bash). From PowerShell, on any OS, use `install.ps1` instead of `bash install.sh`, with the same arguments. On Windows, `bash` in PowerShell is usually WSL's, which would install into WSL. When `install.sh` notices this, it hands off to `install.ps1`, which finds Git Bash for you:
 
 ```powershell
 plugins/context-guard/scripts/install.ps1 --agy
@@ -83,7 +83,7 @@ Windows:
   3. `..\bin\bash.exe` next to the `git` on PATH (`...\Git\cmd\git.exe`), which covers user-scope installs.
 
   Installs where that layout doesn't hold, such as Scoop's shim, need `CONTEXT_GUARD_BASH`. If no Git Bash is found, agy shows no context-guard statusline, the hook does nothing, and agy carries on.
-- Run `install.sh` from Git Bash, or use `install.ps1` from PowerShell (Windows PowerShell 5.1 or PowerShell 7). WSL isn't needed. If it's installed, its bash is refused, because it would install into WSL.
+- Run `install.sh` from Git Bash, or use `install.ps1` from PowerShell (Windows PowerShell 5.1 or PowerShell 7). WSL isn't needed. If `install.sh` is run with WSL's bash, it runs `install.ps1` through `powershell.exe` instead, so it installs into Windows. It stops if the repo isn't on a Windows drive.
 - For agy: no spaces in your user profile path (e.g. `C:\Users\John Smith`). agy can't run a command whose path has one, so the installer refuses. Claude Code isn't affected.
 - If PowerShell blocks the script, run `powershell -ExecutionPolicy Bypass -File plugins/context-guard/scripts/install.ps1 ...`.
 
@@ -124,4 +124,4 @@ For agy: delete `statusLine` from `~/.gemini/antigravity-cli/settings.json` (or 
 npm test
 ```
 
-`test/context-guard.test.mjs` runs the statusline, the prompt hook and the installer for Claude Code and both agy routes. Each case uses a temporary home folder, so your real config isn't touched. On Windows it also runs the `.cmd` launchers and the plugin's hook command through `cmd` the way agy does, and checks that the installer refuses to run under WSL's bash. `install.ps1` is tested under every PowerShell found (Windows PowerShell 5.1, PowerShell 7). It needs `jq` and, on Windows, Git Bash. Cases that need agy, WSL or PowerShell are skipped when those aren't installed.
+`test/context-guard.test.mjs` runs the statusline, the prompt hook and the installer for Claude Code and both agy routes. Each case uses a temporary home folder, so your real config isn't touched. On Windows it also runs the `.cmd` launchers and the plugin's hook command through `cmd` the way agy does, and checks that the installer hands off from WSL's bash to `install.ps1` (or stops when it can't). `install.ps1` is tested under every PowerShell found (Windows PowerShell 5.1, PowerShell 7). It needs `jq` and, on Windows, Git Bash. Cases that need agy, WSL or PowerShell are skipped when those aren't installed.

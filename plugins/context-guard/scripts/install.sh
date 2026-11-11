@@ -50,9 +50,17 @@ else
 fi
 
 # In PowerShell or cmd on Windows, `bash` is usually WSL's, which would install
-# into the Linux home instead of the Windows one.
+# into the Linux home instead of the Windows one. When this script is on a
+# Windows drive, hand off to install.ps1, which finds Git Bash. Otherwise stop.
 if grep -qi microsoft /proc/version 2>/dev/null && [ -d /mnt/c ]; then
   ps1=$(wslpath -w "$SCRIPT_DIR/install.ps1" 2>/dev/null || echo "$SCRIPT_DIR/install.ps1")
+  case "$ps1" in [A-Za-z]:\\*)
+    if command -v powershell.exe >/dev/null 2>&1; then
+      echo "context-guard: this is WSL's bash, so running the Windows installer instead: $ps1" >&2
+      cd "$SCRIPT_DIR"  # from a Linux cwd, powershell.exe warns about UNC paths
+      exec powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$ps1" "$@"
+    fi ;;
+  esac
   echo "context-guard: this is WSL's bash, so it would install into WSL, not Windows. From PowerShell, run:" >&2
   echo "  & \"$ps1\"${*:+ $*}" >&2
   exit 1

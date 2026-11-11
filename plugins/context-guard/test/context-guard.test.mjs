@@ -578,12 +578,44 @@ describe('Windows launchers through cmd', { skip: winOnly }, () => {
     assert.match(r.stderr, /contains a space/);
   });
 
-  test('installer under WSL bash refuses with the Git Bash hint (when WSL is set up)', { skip: spawnSync('wsl.exe', ['-e', 'true']).status !== 0 && 'WSL not available' }, () => {
-    const wslPath = spawnSync('wsl.exe', ['wslpath', '-a', fwd(path.join(scriptsDir, 'install.sh'))], { encoding: 'utf8' }).stdout.trim();
-    const r = spawnSync('wsl.exe', ['bash', wslPath, '--agy'], { encoding: 'utf8' });
+  // Under WSL, install.sh hands off to the real powershell.exe, which would
+  // install into the real Windows home, so these put a fake one (or none) on
+  // PATH inside WSL. `setup` runs first, with a WSL temp dir in $t and the
+  // installer's WSL path in $sh, which it may change.
+  const wslSkip = (isWin && spawnSync('wsl.exe', ['-e', 'true']).status !== 0) ? 'WSL not available' : winOnly;
+  const wslInstall = (setup, ...args) => {
+    const sh = fwd(path.join(scriptsDir, 'install.sh'));
+    const script = `t=$(mktemp -d); trap 'rm -rf "$t"' EXIT; sh=$(wslpath -a "$0"); ${setup}; bash "$sh" "$@"`;
+    return spawnSync('wsl.exe', ['-e', 'bash', '-c', script, sh, ...args], { encoding: 'utf8' });
+  };
+
+  test('installer under WSL bash hands off to install.ps1 via powershell.exe', { skip: wslSkip }, () => {
+    // printf, not echo: dash's echo would read the \a in "\agent-plugins".
+    const fake = `cat > "$t/powershell.exe" <<'EOF'
+#!/bin/sh
+printf 'ARGS %s\\n' "$*"
+exit 7
+EOF
+chmod +x "$t/powershell.exe"; export PATH="$t:$PATH"`;
+    const r = wslInstall(fake, '--agy', '--quiet');
+    assert.equal(r.status, 7, 'returns the Windows installer\'s exit code');
+    assert.match(r.stderr, /running the Windows installer instead/);
+    const ps1 = path.join(scriptsDir, 'install.ps1').replace(/^[a-z]:/, (d) => d.toUpperCase());
+    assert.equal(r.stdout.trim(), `ARGS -NoProfile -ExecutionPolicy Bypass -File ${ps1} --agy --quiet`);
+  });
+
+  test('installer under WSL bash without powershell.exe refuses with the install.ps1 hint', { skip: wslSkip }, () => {
+    const r = wslInstall('export PATH=/usr/bin:/bin', '--agy');
     assert.equal(r.status, 1);
     assert.match(r.stderr, /WSL's bash/);
     assert.match(r.stderr, /install\.ps1" --agy/, 'points to the PowerShell wrapper with the same arguments');
+  });
+
+  test('installer under WSL bash outside a Windows drive refuses, even with powershell.exe', { skip: wslSkip }, () => {
+    const r = wslInstall('cp "$sh" "$t/install.sh"; sh="$t/install.sh"', '--agy');
+    assert.equal(r.status, 1);
+    assert.doesNotMatch(r.stderr, /running the Windows installer/);
+    assert.match(r.stderr, /would install into WSL/);
   });
 });
 
