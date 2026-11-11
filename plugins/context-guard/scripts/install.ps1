@@ -1,6 +1,6 @@
 # context-guard installer for PowerShell (Windows PowerShell 5.1 or PowerShell 7,
 # on Windows, macOS or Linux). Runs install.sh with the right bash and passes
-# its arguments through: install.ps1 [--quiet] [--agy]
+# its arguments through: install.ps1 [--agy | --claude] [--quiet]
 # On Windows, `bash` is usually WSL's, which would install into WSL, so this
 # uses Git Bash: CONTEXT_GUARD_BASH if set, else %ProgramFiles%\Git, else the
 # Git next to `git` on PATH (the same order as agy.cmd).

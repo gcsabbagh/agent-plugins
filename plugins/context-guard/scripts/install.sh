@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# context-guard installer.
-#   Claude Code (default): plugins cannot set statusLine, so this copies the
-#     statusline script into ~/.claude/context-guard and points settings.json
-#     at it. The prompt hook ships with the plugin.
+# context-guard installer. Pick the agent with a flag; with none, it installs
+# for Claude Code, which /context-guard:install in Claude Code relies on.
 #   agy (--agy): points ~/.gemini/antigravity-cli/settings.json at the
 #     statusline. If the agy plugin is installed (agy plugin install), its
 #     scripts and hook are used as they are; otherwise the scripts are copied
 #     into ~/.gemini/context-guard and the prompt hook is registered in
 #     ~/.gemini/config/hooks.json.
-# Usage: install.sh [--quiet] [--agy]
+#   Claude Code (--claude): plugins cannot set statusLine, so this copies the
+#     statusline script into ~/.claude/context-guard and points settings.json
+#     at it. The prompt hook ships with the plugin.
+# Usage: install.sh [--agy | --claude] [--quiet]
 set -euo pipefail
 
 self="${BASH_SOURCE[0]//\\//}"  # dirname doesn't split backslash paths
@@ -20,8 +21,9 @@ for arg in "$@"; do
   case "$arg" in
     --quiet|-q) mode=quiet ;;
     --agy) target=agy ;;
+    --claude) target=claude ;;
     "") ;;
-    *) echo "context-guard: unknown option '$arg' (supported: --quiet, --agy)" >&2; exit 2 ;;
+    *) echo "context-guard: unknown option '$arg' (supported: --agy, --claude, --quiet)" >&2; exit 2 ;;
   esac
 done
 

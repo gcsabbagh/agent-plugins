@@ -355,6 +355,16 @@ describe('installer: Claude Code', { skip }, () => {
     assert.equal(s.read('.claude/settings.json'), '{ nope');
   });
 
+  test('--claude installs the same as no agent flag', () => {
+    const s = sandbox();
+    assert.equal(s.install('--claude').status, 0);
+    const explicit = s.json('.claude/settings.json').statusLine;
+    const t = sandbox();
+    assert.equal(t.install().status, 0);
+    assert.deepEqual(explicit, t.json('.claude/settings.json').statusLine);
+    assert.equal(s.exists('.gemini'), false);
+  });
+
   test('unknown option: exit 2', () => {
     const s = sandbox();
     const r = s.install('--bogus');
