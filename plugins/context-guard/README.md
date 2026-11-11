@@ -45,6 +45,30 @@ agy's `/compact <message>` summarizes and then answers the message, so its line 
 
 Plugins can't set an agent's status line, so every install includes one installer step, `scripts/install.sh`. The sections per agent below give the exact commands.
 
+### One-line install
+
+No clone needed. These commands download the latest context-guard release from GitHub and run its installer with your options.
+
+macOS, Linux and Git Bash:
+
+```
+curl -fsSL https://raw.githubusercontent.com/gcsabbagh/agent-plugins/main/plugins/context-guard/scripts/get.sh | bash -s -- --agy
+```
+
+PowerShell (Windows PowerShell 5.1 or PowerShell 7, any OS):
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/gcsabbagh/agent-plugins/main/plugins/context-guard/scripts/get.ps1))) --agy
+```
+
+- **Options:** everything after the script goes to the installer: the agent (`--agy`, `--claude`) and `--nudge-only`.
+- **`--version 1.1.0`:** installs that release instead of the latest. Releases are tagged `context-guard@<version>`.
+- **`--agy-plugin`:** installs it as an agy plugin, then runs the installer from the installed plugin (see [agy](#agy)).
+- **Updating:** run the same command again.
+- **Why the script-block form in PowerShell:** the usual `irm … | iex` can't pass options.
+- **What it needs:** `curl` (or PowerShell), `tar` and `jq`. Windows 10 and later ship `curl` and `tar`.
+- **Claude Code:** the nudge hook comes with the Claude Code plugin, so install that from the marketplace. A one-line install with `--claude` sets up the status line only.
+
 ### The installer
 
 ```
@@ -62,17 +86,17 @@ bash plugins/context-guard/scripts/install.sh --agy|--claude [--nudge-only]
 
 There are two routes. Either way, restart agy afterwards.
 
-**Script (one step).** From a clone of this repo:
+**Script (one step).** Use the [one-line install](#one-line-install) with `--agy`. From a clone of this repo, run:
 
 ```
 bash plugins/context-guard/scripts/install.sh --agy
 ```
 
-Or, from inside Claude Code with the plugin installed, `/context-guard:install --agy`.
+Or, from inside Claude Code with the plugin installed, run `/context-guard:install --agy`.
 
 This copies the scripts to `~/.gemini/context-guard/`, points `statusLine` in `~/.gemini/antigravity-cli/settings.json` at the status line, and adds a `context-guard` `PreInvocation` hook to `~/.gemini/config/hooks.json`. Other hooks in that file, such as Orca's, are left alone.
 
-**agy plugin.** The plugin folder is also a native agy plugin (`.antigravity-plugin/plugin.json` and a root `hooks.json`). It brings the hook, which you can turn on and off from `/plugin` in agy. agy plugins can't set a status line, though, and the hook reads the context % that the status line records. So run the installer once from the installed plugin:
+**agy plugin.** The plugin folder is also a native agy plugin (`.antigravity-plugin/plugin.json` and a root `hooks.json`). It brings the hook, which you can turn on and off from `/plugin` in agy. agy plugins can't set a status line, though, and the hook reads the context % that the status line records. The [one-line install](#one-line-install) with `--agy-plugin` does both steps. From a clone, run:
 
 ```
 agy plugin install plugins/context-guard
@@ -179,4 +203,4 @@ To add one:
 npm test
 ```
 
-`test/context-guard.test.mjs` runs the status line, the prompt hook and the installer for every supported agent, including both agy routes. Each case uses a temporary home folder, so your real config isn't touched. On Windows it also runs the `.cmd` launchers and the plugin's hook command through `cmd` the way agy does, and checks that the installer hands off from WSL's bash to `install.ps1` (or stops when it can't). `install.ps1` is tested under every PowerShell found (Windows PowerShell 5.1, PowerShell 7). It needs `jq` and, on Windows, Git Bash. Cases that need agy, WSL or PowerShell are skipped when those aren't installed.
+`test/context-guard.test.mjs` runs the status line, the prompt hook and the installer for every supported agent, including both agy routes. Each case uses a temporary home folder, so your real config isn't touched. On Windows it also runs the `.cmd` launchers and the plugin's hook command through `cmd` the way agy does, and checks that the installer hands off from WSL's bash to `install.ps1` (or stops when it can't). The one-line installers (`get.sh`, `get.ps1`) run against a local server standing in for GitHub, with a fake `agy` for `--agy-plugin`. `install.ps1` and `get.ps1` are tested under every PowerShell found (Windows PowerShell 5.1, PowerShell 7). It needs `jq` and, on Windows, Git Bash. Cases that need agy, WSL or PowerShell are skipped when those aren't installed.

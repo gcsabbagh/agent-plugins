@@ -12,7 +12,7 @@ Each plugin's README has the full steps for every agent it supports. Some plugin
 
 ### agy
 
-Install from a clone of this repo with `agy plugin install plugins/<plugin>`, or use the plugin's own installer. The plugin's README says which.
+Plugins come with a one-line install that downloads their latest release, so no clone is needed. Each plugin's README has the command. Releases are tagged `<plugin>@<version>`. From a clone, `agy plugin install plugins/<plugin>` also works.
 
 ### Claude Code
 
