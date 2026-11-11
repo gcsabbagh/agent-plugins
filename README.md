@@ -1,21 +1,27 @@
 # agent-plugins
 
-Plugins for [Claude Code](https://claude.com/claude-code) and agy (Antigravity CLI).
+Plugins for coding agents. Currently supported: agy (Antigravity CLI) and [Claude Code](https://claude.com/claude-code). Plugins share their scripts across agents, so adding an agent doesn't mean another copy of each plugin.
 
-| Plugin | What it does | Claude Code | agy |
+| Plugin | What it does | agy | Claude Code |
 |---|---|---|---|
-| [context-guard](plugins/context-guard) | Context usage in the statusline, plus a `/compact` nudge at task boundaries once context passes a threshold | ✓ | ✓ |
+| [context-guard](plugins/context-guard) | Context usage in the status line, plus a `/compact` nudge at task boundaries once context passes a threshold | ✓ | ✓ |
 
 ## Install
 
-Claude Code:
+Each plugin's README has the full steps for every agent it supports. Some plugins also need a setup step for things an agent's plugins can't do themselves, such as setting the status line.
+
+### agy
+
+Install from a clone of this repo with `agy plugin install plugins/<plugin>`, or use the plugin's own installer. The plugin's README says which.
+
+### Claude Code
+
+This repo is a Claude Code marketplace:
 
 ```
 /plugin marketplace add gcsabbagh/agent-plugins
 /plugin install <plugin>@gcsabbagh-agent-plugins
 ```
-
-agy: each plugin's README explains how to install it. Some plugins also need a setup step for things agy plugins can't do themselves.
 
 ## Tests
 
