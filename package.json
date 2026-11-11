@@ -4,10 +4,10 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "scripts": {
-    "test": "node --test \"plugins/*/test/*.test.mjs\" \"test/*.test.mjs\"",
+    "test": "vitest run",
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/sync-versions.mjs",
     "tag-release": "changeset git-tag",
@@ -17,6 +17,8 @@
     "plugins/*"
   ],
   "devDependencies": {
-    "@changesets/cli": "3.0.3"
+    "@changesets/cli": "3.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
   }
 }

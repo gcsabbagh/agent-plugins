@@ -30,7 +30,9 @@ npm ci
 npm test
 ```
 
-Runs every plugin's `test/*.test.mjs`, plus the release tooling's tests in `test/`, with Node's built-in test runner (Node 22 or later). See each plugin's README for what its tests need. CI runs them on Ubuntu, macOS and Windows for every push and pull request.
+Runs every plugin's `test/*.test.mjs`, plus the release tooling's tests in `test/`, with [Vitest](https://vitest.dev) (Node 22.12 or later). `npx vitest` reruns them as you edit, and `npx vitest run -t <name>` runs only the tests whose names match. See each plugin's README for what its tests need. CI runs them on Ubuntu, macOS and Windows for every push and pull request, lists each test in the log, and annotates failures on the commit.
+
+The project's `.npmrc` sets `legacy-peer-deps`, because npm crashes resolving Vitest's optional peers. So npm doesn't install peers itself, and `package.json` lists `vite`, Vitest's one required peer, as well.
 
 ## Releasing
 

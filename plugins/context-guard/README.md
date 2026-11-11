@@ -150,7 +150,7 @@ Windows:
 - **agy:** no spaces in your user profile path (e.g. `C:\Users\John Smith`). agy can't run a command whose path has one, so the installer refuses.
 - **Claude Code** already requires Git for Windows, and finds its bash itself.
 
-Tests: Node 22 or later, plus the above.
+Tests: Node 22.12 or later, plus the above.
 
 ## Configuration
 

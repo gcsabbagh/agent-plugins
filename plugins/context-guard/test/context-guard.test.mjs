@@ -3,7 +3,7 @@
 // nothing touches your real config. Needs bash and jq; on Windows, Git Bash
 // (the bash on PATH there is usually WSL's). Windows-only cases run the real
 // .cmd launchers through cmd, the way agy runs them.
-import { test, describe, before, after } from 'node:test';
+import { test, describe, beforeAll, afterAll } from 'vitest';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -759,7 +759,7 @@ describe('one-line install (get.sh, get.ps1)', { skip }, () => {
     { tag_name: 'context-guard@1.1.0', draft: false, prerelease: false },
   ];
 
-  before(async () => {
+  beforeAll(async () => {
     // GitHub's archive layout: one top folder holding the whole repo.
     stage = fs.mkdtempSync(path.join(os.tmpdir(), 'context-guard-get-'));
     fs.cpSync(pluginDir, path.join(stage, 'agent-plugins-x', 'plugins', 'context-guard'), { recursive: true });
@@ -793,7 +793,7 @@ describe('one-line install (get.sh, get.ps1)', { skip }, () => {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     base = `http://127.0.0.1:${server.address().port}`;
   });
-  after(() => {
+  afterAll(() => {
     server?.close();
     if (stage) fs.rmSync(stage, { recursive: true, force: true });
   });

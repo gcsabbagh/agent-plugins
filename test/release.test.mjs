@@ -1,7 +1,7 @@
 // Tests for scripts/release.mjs and scripts/sync-versions.mjs: the whole
 // Changesets release in a throwaway repo, with a bare repo as origin and a
 // fake gh that records what it would create.
-import { test, describe } from 'node:test';
+import { test, describe } from 'vitest';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
