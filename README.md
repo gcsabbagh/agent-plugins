@@ -42,7 +42,7 @@ Runs every plugin's `test/*.test.mjs`, plus the release tooling's tests in `test
 Each plugin keeps its version in `plugins/<plugin>/package.json`. A release copies it into the plugin's manifests and the marketplace entry.
 
 1. **With each change users should hear about,** run `npm run changeset`. Pick the plugin and the bump (patch, minor or major), write a summary for users, and commit the generated `.changeset/*.md` file with the change. The summary becomes the plugin's `CHANGELOG.md` entry and its release notes.
-2. **Push to `main`.** Once the tests pass on all three systems, CI releases any pending changesets: it commits "Version packages" to `main`, tags each bumped plugin, and creates its GitHub release. A push with no changesets releases nothing.
+2. **Push to `main`.** Once the tests pass on all three systems, CI releases any pending changesets: it commits "Version packages" to `main`, tags each bumped plugin, and creates its GitHub release. A push with no changesets releases nothing. If a run never starts, run CI on `main` by hand (Actions → CI → Run workflow); it releases the same way.
 
 To release from your machine instead, run `npm run release` with `gh` signed in. It does the same steps, and CI then finds nothing left to do. `npm run release -- --publish` skips the versioning and only tags and releases what's untagged.
 

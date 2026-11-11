@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Run by hand from the Actions tab, e.g. when GitHub drops a run.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,9 +33,10 @@ jobs:
   # Trunk-based: a push to main that carries changesets releases right away.
   # `npm run release` versions them, commits "Version packages" to main, then
   # tags and creates the GitHub releases, the same as on your machine. Its
-  # push uses the workflow token, so it doesn't start another run.
+  # push uses the workflow token, so it doesn't start another run. A manual
+  # run on main releases the same way.
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
     permissions:
