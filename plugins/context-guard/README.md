@@ -42,13 +42,13 @@ Plugins can't set an agent's status line, so every install includes one installe
 ### The installer
 
 ```
-bash plugins/context-guard/scripts/install.sh --agy|--claude [--quiet]
+bash plugins/context-guard/scripts/install.sh --agy|--claude [--nudge-only]
 ```
 
 - **Agent:** `--agy` or `--claude`. With no agent flag it installs for Claude Code, because `/context-guard:install` inside Claude Code relies on that.
-- **`--quiet`:** nudge only, no visible status line. A status line you already had stays as it is, or stays empty. In agy, its own default line stays visible (`stack_with_default`). Run the installer again without `--quiet` to switch back.
+- **`--nudge-only`:** the `/compact` nudge without context-guard's status line. The status line script still runs, because it records the context % the nudge needs, but it prints only a status line you already had, or nothing. In agy, its own default line stays visible (`stack_with_default`). Run the installer again without `--nudge-only` to switch back.
 - **PowerShell, any OS:** use `install.ps1` with the same arguments, e.g. `plugins/context-guard/scripts/install.ps1 --agy`. On Windows, `bash` in PowerShell is usually WSL's, which would install into WSL. When `install.sh` notices this, it hands off to `install.ps1`, which finds Git Bash for you.
-- **Existing status line:** a `statusLine` command you already had is saved as `prev-statusline.sh` in the agent's context-guard folder and keeps running. Its output is shown in quiet mode and dropped otherwise.
+- **Existing status line:** a `statusLine` command you already had is saved as `prev-statusline.sh` in the agent's context-guard folder and keeps running. Its output is shown in nudge-only mode and dropped otherwise.
 - **Backups:** each config file the installer edits is backed up once, on the first run, to `<file>.bak-context-guard` next to the original.
 - **Re-running** is safe and is how you switch modes. Script installs also need a re-run after updating, to copy the new scripts.
 
@@ -87,7 +87,7 @@ On Windows, agy runs commands through `cmd /c`, where `bash` is usually WSL's an
 /context-guard:install
 ```
 
-Then restart Claude Code. Pass `--quiet` to `/context-guard:install` the same way as to the installer.
+Then restart Claude Code. Pass `--nudge-only` to `/context-guard:install` the same way as to the installer.
 
 `/context-guard:install` runs the installer for Claude Code. It copies the status line script to `~/.claude/context-guard/statusline.sh` and points `statusLine` in `~/.claude/settings.json` at it. The nudge hook comes with the plugin. Without the plugin, `bash plugins/context-guard/scripts/install.sh --claude` sets up the status line only.
 
@@ -122,7 +122,7 @@ Tests: Node 22 or later, plus the above.
 
 ## Configuration
 
-**Quiet mode:** see [The installer](#the-installer).
+**Nudge only:** see `--nudge-only` in [The installer](#the-installer).
 
 **`CONTEXT_GUARD_THRESHOLD`** (default `50`): the context % at which the nudge starts and the status line turns yellow. Red stays at 80. Set it where the agent reads its environment:
 

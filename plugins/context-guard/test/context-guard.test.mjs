@@ -187,18 +187,18 @@ describe('statusline', { skip }, () => {
     assert.match(runStatusline(s, claudePayload({ workspace: { current_dir: fwd(repo) } })).line, /feature-x$/);
   });
 
-  test('quiet mode prints only the previous statusline, which receives the same stdin', () => {
+  test('nudge-only mode prints only the previous statusline, which receives the same stdin', () => {
     const s = sandbox();
-    const script = installedStatusline(s, '.claude/context-guard', 'quiet');
+    const script = installedStatusline(s, '.claude/context-guard', 'nudge-only');
     s.write('.claude/context-guard/prev-statusline.sh', '#!/usr/bin/env bash\njq -r \'"prev:" + .session_id\'\n');
     const { line } = runStatusline(s, claudePayload(), { script });
     assert.equal(line, 'prev:sess-claude');
-    assert.ok(fs.existsSync(s.ctxFile('sess-claude')), 'ctx % still recorded in quiet mode');
+    assert.ok(fs.existsSync(s.ctxFile('sess-claude')), 'ctx % still recorded in nudge-only mode');
   });
 
-  test('quiet mode with no previous statusline prints nothing', () => {
+  test('nudge-only mode with no previous statusline prints nothing', () => {
     const s = sandbox();
-    const { stdout } = runStatusline(s, claudePayload(), { script: installedStatusline(s, '.claude/context-guard', 'quiet') });
+    const { stdout } = runStatusline(s, claudePayload(), { script: installedStatusline(s, '.claude/context-guard', 'nudge-only') });
     assert.equal(stdout, '');
   });
 
@@ -215,7 +215,7 @@ describe('statusline', { skip }, () => {
     const s = sandbox();
     const script = installedStatusline(s, 'elsewhere', 'full');
     fs.mkdirSync(s.p('state'));
-    fs.writeFileSync(s.p('state', 'mode'), 'quiet\n');
+    fs.writeFileSync(s.p('state', 'mode'), 'nudge-only\n');
     const { stdout } = runStatusline(s, claudePayload(), { script, env: { CONTEXT_GUARD_DIR: s.p('state').replaceAll('/', '\\') } });
     assert.equal(stdout, '', 'reads mode from CONTEXT_GUARD_DIR');
   });
@@ -353,10 +353,10 @@ describe('installer: Claude Code', { skip }, () => {
     assert.match(s.read('.claude/context-guard/prev-statusline.sh'), /^echo mine$/m);
     assert.equal(s.json('.claude/settings.json.bak-context-guard').statusLine.command, 'echo mine');
 
-    assert.equal(s.install('--quiet').status, 0);
+    assert.equal(s.install('--nudge-only').status, 0);
     assert.match(s.read('.claude/context-guard/prev-statusline.sh'), /^echo mine$/m, 're-run does not save our own command as previous');
     assert.equal(s.json('.claude/settings.json.bak-context-guard').statusLine.command, 'echo mine', 'backup stays the original');
-    assert.equal(s.read('.claude/context-guard/mode').trim(), 'quiet');
+    assert.equal(s.read('.claude/context-guard/mode').trim(), 'nudge-only');
   });
 
   test('refuses invalid JSON and leaves it untouched', () => {
@@ -366,6 +366,16 @@ describe('installer: Claude Code', { skip }, () => {
     assert.equal(r.status, 1);
     assert.match(r.stderr, /not valid JSON/);
     assert.equal(s.read('.claude/settings.json'), '{ nope');
+  });
+
+  test('the old --quiet and -q flags are rejected, nothing written', () => {
+    for (const flag of ['--quiet', '-q']) {
+      const s = sandbox();
+      const r = s.install(flag);
+      assert.equal(r.status, 2);
+      assert.match(r.stderr, /supported: --agy, --claude, --nudge-only/);
+      assert.equal(s.exists('.claude'), false);
+    }
   });
 
   test('--claude installs the same as no agent flag', () => {
@@ -437,9 +447,9 @@ describe('installer: agy, script route', { skip }, () => {
     assert.match(s.read('.gemini/context-guard/prev-statusline.sh'), isWin ? /cmd \/\/c/ : /^echo theirs$/m);
   });
 
-  test('quiet sets stack_with_default; switching back to full removes it', () => {
+  test('nudge-only sets stack_with_default; switching back to full removes it', () => {
     const s = sandbox();
-    s.install('--agy', '--quiet');
+    s.install('--agy', '--nudge-only');
     assert.equal(s.json('.gemini/antigravity-cli/settings.json').statusLine.stack_with_default, true);
     s.install('--agy');
     assert.equal(s.json('.gemini/antigravity-cli/settings.json').statusLine.stack_with_default, undefined);
@@ -520,7 +530,7 @@ describe('installer: agy, plugin route', { skip }, () => {
 describe('Windows launchers through cmd', { skip: winOnly }, () => {
   test('agy.cmd runs the statusline with state in %USERPROFILE%\\.gemini\\context-guard', () => {
     const s = sandbox();
-    s.install('--agy', '--quiet');
+    s.install('--agy', '--nudge-only');
     s.write('.gemini/context-guard/prev-statusline.sh', '#!/usr/bin/env bash\necho prev-out\n');
     const command = s.json('.gemini/antigravity-cli/settings.json').statusLine.command;
     const r = s.cmd(command, { input: JSON.stringify(agyPayload()) });
@@ -531,7 +541,7 @@ describe('Windows launchers through cmd', { skip: winOnly }, () => {
   test('a previous cmd statusline keeps working through prev-statusline.cmd', () => {
     const s = sandbox();
     s.write('.gemini/antigravity-cli/settings.json', { statusLine: { type: 'command', command: 'echo from-cmd' } });
-    s.install('--agy', '--quiet');
+    s.install('--agy', '--nudge-only');
     const r = s.cmd(s.json('.gemini/antigravity-cli/settings.json').statusLine.command, { input: JSON.stringify(agyPayload()) });
     assert.equal(r.stdout.trim(), 'from-cmd', r.stderr);
   });
@@ -620,11 +630,11 @@ printf 'ARGS %s\\n' "$*"
 exit 7
 EOF
 chmod +x "$t/powershell.exe"; export PATH="$t:$PATH"`;
-    const r = wslInstall(fake, '--agy', '--quiet');
+    const r = wslInstall(fake, '--agy', '--nudge-only');
     assert.equal(r.status, 7, 'returns the Windows installer\'s exit code');
     assert.match(r.stderr, /running the Windows installer instead/);
     const ps1 = path.join(scriptsDir, 'install.ps1').replace(/^[a-z]:/, (d) => d.toUpperCase());
-    assert.equal(r.stdout.trim(), `ARGS -NoProfile -ExecutionPolicy Bypass -File ${ps1} --agy --quiet`);
+    assert.equal(r.stdout.trim(), `ARGS -NoProfile -ExecutionPolicy Bypass -File ${ps1} --agy --nudge-only`);
   });
 
   test('installer under WSL bash without powershell.exe refuses with the install.ps1 hint', { skip: wslSkip }, () => {
@@ -656,10 +666,10 @@ describe('install.ps1', { skip: skip || (powershells.length === 0 && 'no PowerSh
   for (const exe of powershells) {
     test(`${exe}: installs with the right bash and passes arguments through`, () => {
       const s = sandbox();
-      const r = ps(exe, s, ['--agy', '--quiet']);
+      const r = ps(exe, s, ['--agy', '--nudge-only']);
       assert.equal(r.status, 0, r.stderr);
-      assert.match(r.stdout, /installed \(mode: quiet\)/);
-      assert.equal(s.read('.gemini/context-guard/mode').trim(), 'quiet');
+      assert.match(r.stdout, /installed \(mode: nudge-only\)/);
+      assert.equal(s.read('.gemini/context-guard/mode').trim(), 'nudge-only');
       assert.ok(s.json('.gemini/config/hooks.json')['context-guard']);
     });
 

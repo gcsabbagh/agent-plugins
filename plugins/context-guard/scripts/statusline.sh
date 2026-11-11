@@ -17,7 +17,8 @@ input=$(cat)
 
 command -v jq >/dev/null 2>&1 || { echo "context-guard: jq not found"; exit 0; }
 
-# Previous statusline: always run (it may have side effects), show only in quiet mode.
+# Previous statusline: always run (it may have side effects), show only in
+# nudge-only mode.
 prev_out=""
 if [ -f "$CG_DIR/prev-statusline.sh" ]; then
   prev_out=$(printf '%s' "$input" | bash "$CG_DIR/prev-statusline.sh" 2>/dev/null)
@@ -51,7 +52,7 @@ if [ -n "$session_id" ] && [ -n "$pct" ]; then
   printf '%s\n' "$pct" > "${TMPDIR:-/tmp}/claude-ctx-$session_id" 2>/dev/null
 fi
 
-if [ "$(cat "$CG_DIR/mode" 2>/dev/null)" = "quiet" ]; then
+if [ "$(cat "$CG_DIR/mode" 2>/dev/null)" = "nudge-only" ]; then
   [ -n "$prev_out" ] && printf '%s\n' "$prev_out"
   exit 0
 fi

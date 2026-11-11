@@ -9,7 +9,7 @@
 #   Claude Code (--claude): plugins cannot set statusLine, so this copies the
 #     statusline script into ~/.claude/context-guard and points settings.json
 #     at it. The prompt hook ships with the plugin.
-# Usage: install.sh [--agy | --claude] [--quiet]
+# Usage: install.sh [--agy | --claude] [--nudge-only]
 set -euo pipefail
 
 self="${BASH_SOURCE[0]//\\//}"  # dirname doesn't split backslash paths
@@ -19,11 +19,11 @@ mode=full
 target=claude
 for arg in "$@"; do
   case "$arg" in
-    --quiet|-q) mode=quiet ;;
+    --nudge-only) mode=nudge-only ;;
     --agy) target=agy ;;
     --claude) target=claude ;;
     "") ;;
-    *) echo "context-guard: unknown option '$arg' (supported: --agy, --claude, --quiet)" >&2; exit 2 ;;
+    *) echo "context-guard: unknown option '$arg' (supported: --agy, --claude, --nudge-only)" >&2; exit 2 ;;
   esac
 done
 
@@ -144,12 +144,12 @@ if [ -n "$current" ] && [[ "$current" != *context-guard/*statusline* ]]; then
 fi
 
 statusline_cmd=$(script_cmd statusline)
-# In quiet mode agy would otherwise show an empty line in place of its own;
-# switching back to full undoes that.
+# In nudge-only mode agy would otherwise show an empty line in place of its
+# own; switching back to full undoes that.
 update_json "$SETTINGS" '.statusLine = ((.statusLine // {}) + {type: "command", command: $cmd})
   | if $target != "agy" then .
-    elif $mode == "quiet" then .statusLine.stack_with_default = true
-    elif $prev_mode == "quiet" then del(.statusLine.stack_with_default)
+    elif $mode == "nudge-only" then .statusLine.stack_with_default = true
+    elif $prev_mode == "nudge-only" then del(.statusLine.stack_with_default)
     else . end' \
   --arg cmd "$statusline_cmd" --arg target "$target" --arg mode "$mode" --arg prev_mode "$prev_mode"
 echo "context-guard: installed (mode: $mode). statusLine -> $statusline_cmd"
