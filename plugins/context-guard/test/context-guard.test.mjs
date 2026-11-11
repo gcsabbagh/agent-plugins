@@ -153,6 +153,19 @@ describe('statusline', { skip }, () => {
     assert.equal(color(80), '31');
   });
 
+  test('colors follow CONTEXT_GUARD_THRESHOLD: yellow from it, red from 80; invalid values fall back to 50', () => {
+    const s = sandbox();
+    const color = (pct, threshold) => runStatusline(s, claudePayload({ context_window: { used_percentage: pct } }), { env: { CONTEXT_GUARD_THRESHOLD: threshold } }).stdout.match(/\x1b\[(\d+)mctx/)[1];
+    assert.equal(color(0, '1'), '32');
+    assert.equal(color(1, '1'), '33');
+    assert.equal(color(79, '1'), '33');
+    assert.equal(color(80, '1'), '31');
+    assert.equal(color(85, '90'), '31', 'red from 80 even when the threshold is higher');
+    assert.equal(color(79, '90'), '32');
+    assert.equal(color(49, 'abc'), '32');
+    assert.equal(color(50, 'abc'), '33');
+  });
+
   test('agy payload: cost null and no line counts, so neither is shown', () => {
     const s = sandbox();
     const { line } = runStatusline(s, agyPayload({ cost: null }), { script: installedStatusline(s, '.gemini/context-guard') });

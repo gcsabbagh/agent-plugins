@@ -6,7 +6,7 @@ Supported agents: [agy (Antigravity CLI)](#agy) and [Claude Code](#claude-code).
 
 ## What you get
 
-**Status line.** The model, context % (green under 50, yellow under 80, red at 80 and above) and git branch. Session cost and lines added and removed are shown when the agent reports them.
+**Status line.** The model, context % and git branch. The context % is green below the nudge threshold (50 by default), yellow from the threshold, when the nudge is on, and red at 80 and above, when the nudge also asks to save state first. Session cost and lines added and removed are shown when the agent reports them.
 
 agy:
 
@@ -124,7 +124,7 @@ Tests: Node 22 or later, plus the above.
 
 **Quiet mode:** see [The installer](#the-installer).
 
-**`CONTEXT_GUARD_THRESHOLD`** (default `50`): the context % at which the nudge starts. Set it where the agent reads its environment:
+**`CONTEXT_GUARD_THRESHOLD`** (default `50`): the context % at which the nudge starts and the status line turns yellow. Red stays at 80. Set it where the agent reads its environment:
 
 - **agy:** an environment variable in the shell you start agy from.
 - **Claude Code:** the `env` block of `~/.claude/settings.json`.

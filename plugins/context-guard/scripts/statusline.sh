@@ -61,9 +61,13 @@ reset=$'\033[0m'; dim=$'\033[2m'; green=$'\033[32m'; yellow=$'\033[33m'; red=$'\
 if [ -z "$pct" ]; then
   ctx="${dim}ctx --${reset}"
 else
-  if   [ "$pct" -lt 50 ]; then c=$green
-  elif [ "$pct" -lt 80 ]; then c=$yellow
-  else c=$red; fi
+  # Yellow from the nudge threshold (same default and validation as the prompt
+  # hook), red from 80, where the hook also asks to save state first.
+  threshold="${CONTEXT_GUARD_THRESHOLD:-50}"
+  case "$threshold" in ''|*[!0-9]*) threshold=50 ;; esac
+  if   [ "$pct" -ge 80 ]; then c=$red
+  elif [ "$pct" -ge "$threshold" ]; then c=$yellow
+  else c=$green; fi
   ctx="${c}ctx ${pct}%${reset}"
 fi
 
