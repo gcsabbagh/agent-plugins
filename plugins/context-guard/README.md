@@ -6,11 +6,17 @@ Supported agents: [agy (Antigravity CLI)](#agy) and [Claude Code](#claude-code).
 
 ## What you get
 
-**Status line.** The model, context % and git branch. The context % is green below the nudge threshold (50 by default), yellow from the threshold, when the nudge is on, and red at 80 and above, when the nudge also asks to save state first. Session cost and lines added and removed are shown when the agent reports them.
+**Status line.** The model, context % and git branch, plus these segments when there's data for them:
+
+- **Context %:** green below the nudge threshold (50 by default), yellow from the threshold, when the nudge is on, and red at 80 and above, when the nudge also asks to save state first.
+- **Permission mode:** shown before the model when the agent sends it, e.g. `auto` or `plan` in agy.
+- **Cost:** the session cost, when the agent reports one.
+- **Quota:** shown in cost's place when the agent sends usage windows instead, e.g. agy on a subscription. It shows how much is left of the window closest to running out, e.g. `quota 49% wk` (weekly) or `5h`. Yellow under 25%, red under 10%.
+- **Lines changed:** lines added and removed. They come from the agent when it counts them for the session, otherwise from `git diff HEAD`, i.e. the repo's uncommitted changes, staged or not.
 
 agy:
 
-![context-guard status line in agy: model, ctx 0% in green, git branch](docs/statusline-agy.png)
+![context-guard status line in agy: auto mode, model, ctx 0% in green, quota 49% wk, lines added and removed, git branch](docs/statusline-agy.png)
 
 Claude Code:
 
@@ -29,7 +35,7 @@ agy's `/compact <message>` summarizes and then answers the message, so its line 
 
 | | agy | Claude Code |
 |---|---|---|
-| Status line segments | model, context %, branch | model, context %, cost, lines changed, branch |
+| Status line segments | mode, model, context %, quota, lines changed (uncommitted, from git), branch | model, context %, cost, lines changed (this session), branch |
 | Nudge hook | `PreInvocation`, first model call of each turn | `UserPromptSubmit` |
 | Where the hook comes from | the agy plugin, or the installer | the Claude Code plugin |
 | Installer flag | `--agy` | `--claude` |
@@ -163,7 +169,7 @@ To add one:
 
 - **`install.sh`:** add a `--<agent>` flag that sets the agent's config paths and writes its settings format.
 - **`prompt-hook.sh`:** add a flag for the agent's hook input keys, output format and `/compact` syntax.
-- **`statusline.sh`:** change it only if the agent's status line JSON uses other field names.
+- **`statusline.sh`:** segments show whenever their fields are present, so change it only if the agent's status line JSON uses other field names, or sends something new worth showing.
 - **Manifest:** add one if the agent has a plugin format, and add it to the test that keeps the manifests' name, version and description in sync.
 - **Tests and docs:** add tests in `test/context-guard.test.mjs`, a column in the tables above, and a column in the [repo README](../../README.md).
 

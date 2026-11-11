@@ -179,6 +179,49 @@ describe('statusline', { skip }, () => {
     assert.match(runStatusline(s, agyPayload({ cost: 0.5 })).line, /\$0\.50/);
   });
 
+  test('permission mode (cycle_mode) leads the line when sent', () => {
+    const s = sandbox();
+    const r = runStatusline(s, agyPayload({ cycle_mode: 'plan' }));
+    assert.match(r.line, /^plan · Gemini 4 Argon \(Medium\)  ctx 61%/);
+    assert.match(r.stdout, /\x1b\[38;5;209mplan/, 'in orange');
+  });
+
+  test('quota: the lowest window left is shown, named 5h, wk or by its key', () => {
+    const s = sandbox();
+    const quota = (q) => runStatusline(s, agyPayload({ quota: q })).line;
+    assert.match(quota({ 'gemini-5h': { remaining_fraction: 0.97 }, 'gemini-argon-wtu-weekly': { remaining_fraction: 0.4993 }, 'bad': 'x' }), /ctx 61%  quota 49% wk$/);
+    assert.match(quota({ 'gemini-5h': { remaining_fraction: 0.3 }, 'gemini-weekly': { remaining_fraction: 0.9 } }), /quota 30% 5h/);
+    assert.match(quota({ 'monthly-pool': { remaining_fraction: 0.6 } }), /quota 60% monthly-pool/);
+    assert.doesNotMatch(quota({}), /quota/);
+    assert.doesNotMatch(quota('nonsense'), /quota/);
+  });
+
+  test('quota: yellow under 25%, red under 10%, hidden when cost is sent', () => {
+    const s = sandbox();
+    const color = (f) => runStatusline(s, agyPayload({ quota: { 'gemini-5h': { remaining_fraction: f } } })).stdout.match(/(\x1b\[(\d+)m)?quota/)[2];
+    assert.equal(color(0.25), undefined);
+    assert.equal(color(0.24), '33');
+    assert.equal(color(0.09), '31');
+    assert.doesNotMatch(runStatusline(s, claudePayload({ quota: { 'gemini-5h': { remaining_fraction: 0.5 } } })).line, /quota/);
+  });
+
+  test('lines changed: from git diff when the agent sends none, else the agent\'s own', () => {
+    const s = sandbox();
+    const repo = s.p('repo');
+    fs.mkdirSync(repo);
+    const git = (...a) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...a], { encoding: 'utf8' });
+    git('init', '-q', '-b', 'main');
+    fs.writeFileSync(path.join(repo, 'a.txt'), 'one\ntwo\nthree\n');
+    git('add', '.'); git('commit', '-q', '-m', 'init');
+    const ws = { workspace: { current_dir: fwd(repo) } };
+    assert.match(runStatusline(s, agyPayload(ws)).line, /ctx 61%  main$/, 'clean repo: no lines');
+    fs.writeFileSync(path.join(repo, 'a.txt'), 'one\n2\nthree\nfour\nfive\n');
+    fs.writeFileSync(path.join(repo, 'b.txt'), 'staged\n');
+    git('add', 'b.txt');
+    assert.match(runStatusline(s, agyPayload(ws)).line, /ctx 61%  \+4 -1  main$/, 'unstaged and staged changes');
+    assert.match(runStatusline(s, claudePayload(ws)).line, /\+42 -7  main$/, 'agent-reported counts win');
+  });
+
   test('git branch of the workspace is shown', () => {
     const s = sandbox();
     const repo = s.p('repo');

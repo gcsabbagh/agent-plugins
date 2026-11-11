@@ -26,7 +26,7 @@ fi
 
 # Unit separator, not tab: tabs are IFS whitespace, so empty fields would collapse.
 # tr strips the CR that jq on Windows adds.
-IFS=$'\x1f' read -r session_id model pct cost added removed dir < <(
+IFS=$'\x1f' read -r session_id model pct cost added removed dir mode quota_pct quota_window < <(
   printf '%s' "$input" | jq -r '
     def pct:
       if (.context_window.used_percentage // null) != null then .context_window.used_percentage
@@ -38,13 +38,23 @@ IFS=$'\x1f' read -r session_id model pct cost added removed dir < <(
     # Claude Code sends cost as an object; agy sends null or a bare number and
     # has no line counts. Missing fields come out empty and are not shown.
     (.cost | if type == "object" then . elif type == "number" then {total_cost_usd: .} else {} end) as $cost |
+    # agy on a subscription sends no cost, but sends how much of each usage
+    # window is left (quota.<name>.remaining_fraction). Keep the lowest.
+    (.quota | if type == "object" then
+        [to_entries[] | select((.value | type) == "object" and (.value.remaining_fraction | type) == "number")]
+        | min_by(.value.remaining_fraction)
+      else null end) as $quota |
     [ (.session_id // ""),
       (.model.display_name // .model.id // "?"),
       (pct | if . == "" then "" else floor end),
       ($cost.total_cost_usd // ""),
       ($cost.total_lines_added // ""),
       ($cost.total_lines_removed // ""),
-      (.workspace.current_dir // .cwd // "")
+      (.workspace.current_dir // .cwd // ""),
+      # Permission mode (agy: auto, plan, ...), which a custom line replaces.
+      (.cycle_mode // ""),
+      (if $quota then $quota.value.remaining_fraction * 100 | floor else "" end),
+      (if $quota then $quota.key | if test("5h$") then "5h" elif test("weekly$") then "wk" else . end else "" end)
     ] | map(tostring) | join("\u001f")' | tr -d '\r'
 )
 
@@ -58,6 +68,7 @@ if [ "$(cat "$CG_DIR/mode" 2>/dev/null)" = "nudge-only" ]; then
 fi
 
 reset=$'\033[0m'; dim=$'\033[2m'; green=$'\033[32m'; yellow=$'\033[33m'; red=$'\033[31m'; cyan=$'\033[36m'
+orange=$'\033[38;5;209m'
 
 if [ -z "$pct" ]; then
   ctx="${dim}ctx --${reset}"
@@ -72,14 +83,28 @@ else
   ctx="${c}ctx ${pct}%${reset}"
 fi
 
-
 branch=""
 if [ -n "$dir" ]; then
   branch=$(git -C "$dir" --no-optional-locks branch --show-current 2>/dev/null)
+  # Agents that don't report lines changed (agy) get the repo's uncommitted
+  # changes, staged or not, instead. Shown only when there are some.
+  if [ -z "$added$removed" ]; then
+    read -r git_added git_removed < <(git -C "$dir" --no-optional-locks diff HEAD --numstat 2>/dev/null |
+      awk '$1 != "-" { a += $1; r += $2 } END { if (a + r > 0) print a, r }')
+    added=${git_added:-}; removed=${git_removed:-}
+  fi
 fi
 
 line="${model}  ${ctx}"
+[ -n "$mode" ] && line="${orange}${mode}${reset}${dim} · ${reset}${line}"
 [ -n "$cost" ] && line="${line}  $(printf '$%.2f' "$cost" 2>/dev/null || printf '$%s' "$cost")"
+if [ -z "$cost" ] && [ -n "$quota_pct" ]; then
+  # How much of the tightest usage window is left: yellow under 25%, red under 10%.
+  if   [ "$quota_pct" -lt 10 ]; then qc=$red
+  elif [ "$quota_pct" -lt 25 ]; then qc=$yellow
+  else qc=""; fi
+  line="${line}  ${qc}quota ${quota_pct}% ${quota_window}${qc:+$reset}"
+fi
 [ -n "$added$removed" ] && line="${line}  ${green}+${added:-0}${reset} ${red}-${removed:-0}${reset}"
 [ -n "$branch" ] && line="${line}  ${cyan}${branch}${reset}"
 printf '%s\n' "$line"
