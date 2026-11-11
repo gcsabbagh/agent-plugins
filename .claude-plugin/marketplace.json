@@ -1,0 +1,13 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "gcsabbagh-perso",
+  "description": "Personal Claude Code plugins",
+  "owner": { "name": "Georges Sabbagh" },
+  "plugins": [
+    {
+      "name": "context-guard",
+      "description": "Context usage in the statusline, plus a /compact nudge at task boundaries once context passes a threshold.",
+      "source": "./plugins/context-guard"
+    }
+  ]
+}

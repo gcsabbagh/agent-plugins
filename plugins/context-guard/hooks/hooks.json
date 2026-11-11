@@ -1,0 +1,15 @@
+{
+  "description": "Nudges Claude to suggest /compact at task boundaries when context is high",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/prompt-hook.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
