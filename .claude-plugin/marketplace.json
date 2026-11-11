@@ -1,8 +1,10 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "gcsabbagh-perso",
-  "description": "Personal Claude Code plugins",
-  "owner": { "name": "Georges Sabbagh" },
+  "name": "gcsabbagh-agent-plugins",
+  "description": "Plugins for Claude Code and agy (Antigravity CLI)",
+  "owner": {
+    "name": "Georges Sabbagh"
+  },
   "plugins": [
     {
       "name": "context-guard",

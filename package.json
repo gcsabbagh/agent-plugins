@@ -1,0 +1,12 @@
+{
+  "name": "agent-plugins",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"plugins/*/test/*.test.mjs\""
+  }
+}

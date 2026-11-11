@@ -21,8 +21,8 @@ Claude doesn't suggest it in the middle of debugging. Above 80% it also tells yo
 ## Install
 
 ```
-/plugin marketplace add gcsabbagh/perso
-/plugin install context-guard@gcsabbagh-perso
+/plugin marketplace add gcsabbagh/agent-plugins
+/plugin install context-guard@gcsabbagh-agent-plugins
 /context-guard:install
 ```
 
@@ -111,7 +111,7 @@ In agy, the statusline JSON has the same shape, so the statusline script is shar
 ## Uninstall
 
 ```
-/plugin uninstall context-guard@gcsabbagh-perso
+/plugin uninstall context-guard@gcsabbagh-agent-plugins
 ```
 
 Then restore `statusLine` in `~/.claude/settings.json` from `settings.json.bak-context-guard`, or delete the key.
