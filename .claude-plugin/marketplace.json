@@ -9,7 +9,12 @@
     {
       "name": "context-guard",
       "description": "Context usage in the statusline, plus a /compact nudge at task boundaries once context passes a threshold.",
-      "source": "./plugins/context-guard"
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/gcsabbagh/agent-plugins.git",
+        "path": "plugins/context-guard",
+        "ref": "context-guard@1.1.0"
+      }
     }
   ]
 }

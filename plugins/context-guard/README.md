@@ -121,6 +121,8 @@ Then restart Claude Code. Pass `--nudge-only` to `/context-guard:install` the sa
 
 `/context-guard:install` runs the installer for Claude Code. It copies the status line script to `~/.claude/context-guard/statusline.sh` and points `statusLine` in `~/.claude/settings.json` at it. The nudge hook comes with the plugin. Without the plugin, `bash plugins/context-guard/scripts/install.sh --claude` sets up the status line only.
 
+The marketplace installs the latest release (the `context-guard@<version>` tag), not `main`. To update, run `/plugin marketplace update gcsabbagh-agent-plugins` (or turn on auto-update for the marketplace in `/plugin`), then run `/context-guard:install` again to copy the new status line script.
+
 ## Requirements
 
 All platforms:

@@ -7,6 +7,16 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test \"plugins/*/test/*.test.mjs\""
+    "test": "node --test \"plugins/*/test/*.test.mjs\" \"test/*.test.mjs\"",
+    "changeset": "changeset",
+    "version-packages": "changeset version && node scripts/sync-versions.mjs",
+    "tag-release": "changeset git-tag",
+    "release": "node scripts/release.mjs"
+  },
+  "workspaces": [
+    "plugins/*"
+  ],
+  "devDependencies": {
+    "@changesets/cli": "3.0.3"
   }
 }

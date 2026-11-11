@@ -552,6 +552,9 @@ describe('installer: agy, plugin route', { skip }, () => {
     const claude = JSON.parse(fs.readFileSync(path.join(pluginDir, '.claude-plugin', 'plugin.json'), 'utf8'));
     assert.equal(manifest.name, claude.name);
     assert.equal(manifest.version, claude.version, 'keep both manifests on the same version');
+    const pkg = JSON.parse(fs.readFileSync(path.join(pluginDir, 'package.json'), 'utf8'));
+    assert.equal(pkg.name, claude.name, 'package.json names the plugin, which Changesets uses for the context-guard@<version> tags');
+    assert.equal(pkg.version, claude.version, 'Changesets bumps package.json; scripts/sync-versions.mjs copies it into the manifests');
     assert.equal(manifest.description, claude.description);
   });
 
