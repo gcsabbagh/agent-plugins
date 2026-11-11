@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
-# context-guard statusline. Installed to ~/.claude/context-guard/statusline.sh.
-# Reads Claude Code's statusline JSON on stdin, records context % for the
-# prompt hook, runs any previous statusline, and prints one line.
+# context-guard statusline. Installed to ~/.claude/context-guard/ (Claude Code)
+# or ~/.gemini/context-guard/ (agy); both send the same statusline JSON on stdin.
+# Records context % for the prompt hook, runs any previous statusline, and
+# prints one line.
 
-CG_DIR="$HOME/.claude/context-guard"
+# State (mode, previous statusline) lives next to the installed copy, unless
+# CONTEXT_GUARD_DIR says otherwise (the agy plugin runs from its own folder).
+# agy's Windows launcher passes backslash paths, which dirname doesn't split.
+if [ -n "${CONTEXT_GUARD_DIR:-}" ]; then
+  CG_DIR="${CONTEXT_GUARD_DIR//\\//}"
+else
+  self="${BASH_SOURCE[0]//\\//}"
+  CG_DIR="$(cd "$(dirname "$self")" && pwd)"
+fi
 input=$(cat)
 
 command -v jq >/dev/null 2>&1 || { echo "context-guard: jq not found"; exit 0; }
@@ -25,12 +34,15 @@ IFS=$'\x1f' read -r session_id model pct cost added removed dir < <(
           | (.input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.cache_read_input_tokens // 0))
          * 100 / .context_window.context_window_size)
       else "" end;
+    # Claude Code sends cost as an object; agy sends null or a bare number and
+    # has no line counts. Missing fields come out empty and are not shown.
+    (.cost | if type == "object" then . elif type == "number" then {total_cost_usd: .} else {} end) as $cost |
     [ (.session_id // ""),
       (.model.display_name // .model.id // "?"),
       (pct | if . == "" then "" else floor end),
-      (.cost.total_cost_usd // 0),
-      (.cost.total_lines_added // 0),
-      (.cost.total_lines_removed // 0),
+      ($cost.total_cost_usd // ""),
+      ($cost.total_lines_added // ""),
+      ($cost.total_lines_removed // ""),
       (.workspace.current_dir // .cwd // "")
     ] | map(tostring) | join("\u001f")' | tr -d '\r'
 )
@@ -55,13 +67,14 @@ else
   ctx="${c}ctx ${pct}%${reset}"
 fi
 
-cost_fmt=$(printf '$%.2f' "$cost" 2>/dev/null || printf '$%s' "$cost")
 
 branch=""
 if [ -n "$dir" ]; then
   branch=$(git -C "$dir" --no-optional-locks branch --show-current 2>/dev/null)
 fi
 
-line="${model}  ${ctx}  ${cost_fmt}  ${green}+${added}${reset} ${red}-${removed}${reset}"
+line="${model}  ${ctx}"
+[ -n "$cost" ] && line="${line}  $(printf '$%.2f' "$cost" 2>/dev/null || printf '$%s' "$cost")"
+[ -n "$added$removed" ] && line="${line}  ${green}+${added:-0}${reset} ${red}-${removed:-0}${reset}"
 [ -n "$branch" ] && line="${line}  ${cyan}${branch}${reset}"
 printf '%s\n' "$line"

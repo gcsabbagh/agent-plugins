@@ -1,0 +1,11 @@
+{
+  "context-guard": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "scripts\\agy.cmd prompt-hook --agy || bash scripts/prompt-hook.sh --agy",
+        "timeout": 10
+      }
+    ]
+  }
+}

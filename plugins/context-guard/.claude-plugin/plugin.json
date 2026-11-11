@@ -1,6 +1,6 @@
 {
   "name": "context-guard",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Context usage in the statusline, plus a /compact nudge at task boundaries once context passes a threshold.",
   "author": { "name": "Georges Sabbagh" }
 }
